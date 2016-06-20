@@ -122,7 +122,7 @@ function zipDatabases()
 
 function zipWebpages()
 {
-    global $dir, $fileDirectories, $websitesName, $progress, $_baseUrl, $databasesName, $websitesName;
+    global $dir, $fileDirectories, $websitesName, $progress, $_baseUrl, $databasesName, $websitesName, $folderName;
     
     $progress .= "Zipping websites ";
     $path = $dir . $websitesName;
