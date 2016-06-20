@@ -10,7 +10,8 @@ $mailTo = "your_email"; // input your mail which will reveive backup status and 
 $fileDirectories = array("your_dir", "your_dir2"); // enter directories that you want to backup e.g /var/www/mysite
 
 $date = date("Y-m-d");
-$dir = "backup";
+$dir = "backup"; //name of the output folder
+$folderName;
 $databasesName = "databases-$date.zip"; // name for database .zip file
 $websitesName = "websites-$date.zip"; // name for websites .zip file
 $progress = "";
@@ -24,7 +25,10 @@ date_default_timezone_set('Europe/Vilnius');
 
 function removePrevious()
 {
-    global $dir, $progress;
+    global $dir, $progress, $folderName;
+    
+    $folderName = $dir;
+    $dir = getcwd() . "/" . $dir . "/";
     
     if(file_exists($dir)) // if there is a folder with backup, we delete it first
     {
@@ -77,7 +81,7 @@ function backupDatabases()
     {
         if($databases[$a] != "information_schema" && $databases[$a] != "performance_schema")
         {
-            $path = getcwd() . "/" . $dir . "/$databases[$a].sql";
+            $path = $dir . "$databases[$a].sql";
             $command = "mysqldump --user=root --password=freedom1000 --host=localhost $databases[$a] > $path"; // we are backuping each database, by calling mysqldump shell command
             $progress .= "Backuping $databases[$a] ";
             exec($command, $output, $return);
@@ -102,7 +106,8 @@ function zipDatabases()
     
     echo "Zipping databases ";
     $progress .= "Zipping databases ";
-    $command = "zip -j $dir/$databasesName $dir/*.*"; // we are zipping all database backup files into one .zip file
+    $path = $dir . $databasesName;
+    $command = "zip -j $path $dir/*.*"; // we are zipping all database backup files into one .zip file
     exec($command, $output, $return);
     if(!$return)
     {
@@ -120,7 +125,8 @@ function zipWebpages()
     global $dir, $fileDirectories, $websitesName, $progress, $_baseUrl, $databasesName, $websitesName;
     
     $progress .= "Zipping websites ";
-    $command = "zip -r $dir/$websitesName "; // we are zipping all directories that were marked for backup into one .zip
+    $path = $dir . $websitesName;
+    $command = "zip -r $path "; // we are zipping all directories that were marked for backup into one .zip
     for($a = 0; $a < sizeof($fileDirectories); $a++)
     {
         $command .= $fileDirectories[$a] . " ";
@@ -136,8 +142,8 @@ function zipWebpages()
     }
 
     $progress .= "<br />";
-    $progress .= "Database backup: <a href='$_baseUrl/$dir/" . "$databasesName' target='_blank'>download</a><br />";
-    $progress .= "Website backup: <a href='$_baseUrl/$dir/" . "$websitesName' target='_blank'>download</a><br /><br />";
+    $progress .= "Database backup: <a href='$_baseUrl/$folderName/" . "$databasesName' target='_blank'>download</a><br />";
+    $progress .= "Website backup: <a href='$_baseUrl/$folderName/" . "$websitesName' target='_blank'>download</a><br /><br />";
     $progress .= "Have a great day!<br /> <br />";
     $progress .= date("Y-m-d H:i:s") . "<br />";
     
