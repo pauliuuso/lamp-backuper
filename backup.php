@@ -11,7 +11,7 @@ $fileDirectories = array("your_dir", "your_dir2"); // enter directories that you
 
 $date = date("Y-m-d");
 $dir = "backup"; //name of the output folder
-$folderName;
+$folderName = "";
 $databasesName = "databases-$date.zip"; // name for database .zip file
 $websitesName = "websites-$date.zip"; // name for websites .zip file
 $progress = "";
@@ -140,6 +140,8 @@ function zipWebpages()
     {
         $progress .= "- <span style='color: red;'>fail!</span> Error: " . shell_exec($command) . "<br />";
     }
+    
+    chmodFolder();
 
     $progress .= "<br />";
     $progress .= "Database backup: <a href='$_baseUrl/$folderName/" . "$databasesName' target='_blank'>download</a><br />";
@@ -150,6 +152,17 @@ function zipWebpages()
     echo $progress;
     
     sendMail();
+}
+
+function chmodFolder()
+{
+    global $dir, $databasesName, $websitesName;
+    
+    $commands = array("chown apache:apache " . $dir, "chown apache:apache " . $dir . $databasesName, "chmod 755 " . $dir . $databasesName, "chown apache:apache " . $dir . $websitesName, "chmod 755 " . $dir . $websitesName);
+    for($a = 0; $a < sizeof($commands); $a++)
+    {
+        exec($commands[$a], $output, $return);
+    }
 }
 
 function sendMail()
