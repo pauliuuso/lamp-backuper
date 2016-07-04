@@ -10,7 +10,7 @@ $mailTo = "your_email"; // input your mail which will reveive backup status and 
 $fileDirectories = array("your_dir", "your_dir2"); // enter directories that you want to backup e.g /var/www/mysite
 
 $date = date("Y-m-d");
-$dir = "backup"; //name of the output folder
+$dir = "backup"; //name of the output folder (enter full path e.g /var/www/mysite
 $folderName = "";
 $databasesName = "databases-$date.zip"; // name for database .zip file
 $websitesName = "websites-$date.zip"; // name for websites .zip file
@@ -28,7 +28,7 @@ function removePrevious()
     global $dir, $progress, $folderName;
     
     $folderName = $dir;
-    $dir = getcwd() . "/" . $dir . "/";
+    $dir = $dir . "/";
     
     if(file_exists($dir)) // if there is a folder with backup, we delete it first
     {
