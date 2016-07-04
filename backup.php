@@ -1,17 +1,21 @@
 <?php
+require 'vendor/autoload.php';
 
 $_hostname = "your_hostname"; // change this to your hostname
 $_username = "your_username"; // your database user name
 $_password = "your_password"; // database user's password
 $_database = "your_database"; // any of your databases
+$_smtpname = "your_smtp_name"; // eg name@gmail.com
+$_smtppassword = "your_smtp_password";
+$_smtphost = "your_smtp_hostname"; // e.g smtp.gmail.com
 $_baseUrl = "http://your_url"; // your base url (if you'll want to run backup from web)
 $mailFrom = "robot@example.com"; // type in any mail adress, like robot@yourdomain.com
 $mailTo = "your_email"; // input your mail which will reveive backup status and links to download .zip files
 $fileDirectories = array("your_dir", "your_dir2"); // enter directories that you want to backup e.g /var/www/mysite
 
 $date = date("Y-m-d");
-$dir = "backup"; //name of the output folder (enter full path e.g /var/www/mysite
-$folderName = "";
+$dir = "your_path"; //name of the folder that this file is in (enter full path e.g /var/www/mysite
+$folderName = "backup";
 $databasesName = "databases-$date.zip"; // name for database .zip file
 $websitesName = "websites-$date.zip"; // name for websites .zip file
 $progress = "";
@@ -167,10 +171,35 @@ function chmodFolder()
 
 function sendMail()
 {
-    global $progress, $mailFrom, $mailTo;
-    $subject = "LAMP backup succesful!";
-    $headers = "From: $mailFrom\r\nMIME-Version: 1.0\r\nContent-type: text/html; charset=iso-8859-1\r\n";
-    mail($mailTo, $subject, $progress, $headers); // sending mail with backup status, and download links
+    global $progress, $mailFrom, $mailTo, $_smtpname, $_smtppassword, $_smtphost;
+
+    $mail = new PHPMailer;
+    $mail->isSMTP(true);/*Set mailer to use SMTP*/
+    $mail->Host = $_smtphost;/*Specify main and backup SMTP servers*/
+    $mail->Port = 465;
+    $mail->SMTPAuth = true;/*Enable SMTP authentication*/
+    $mail->Username = $_smtpname;/*SMTP username*/
+    $mail->Password = $_smtppassword;/*SMTP password*/
+    $mail->SMTPSecure = 'ssl';
+    $mail->From = 'backup@teroute.com';
+    $mail->FromName = 'Lamp-backuper';
+    $mail->addAddress($mailTo);/*Add a recipient*/
+    $mail->WordWrap = 70;/*DEFAULT = Set word wrap to 50 characters*/
+    $mail->isHTML(true);/*Set email format to HTML (default = true)*/
+    $mail->Subject = $subject;
+    $mail->Body    = $progress;
+    $mail->AltBody = $progress;
+    if(!$mail->send()) 
+    {
+        echo 'Message could not be sent.';
+        echo 'Mailer Error: ' . $mail->ErrorInfo;
+    } 
+    else 
+    {
+        echo 'Message sent!';
+    }
+    
+    
 }
 
 removePrevious();
