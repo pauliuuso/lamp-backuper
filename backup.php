@@ -1,20 +1,20 @@
 <?php
 require 'vendor/autoload.php';
 
-$_hostname = "your_hostname"; // change this to your hostname
-$_username = "your_username"; // your database user name
+$_hostname = "localhost"; // change this to your hostname
+$_username = "mysql_user"; // your database user name
 $_password = "your_password"; // database user's password
-$_database = "your_database"; // any of your databases
+$_database = "my_database"; // any of your databases
 $_smtpname = "your_smtp_name"; // eg name@gmail.com
 $_smtppassword = "your_smtp_password";
 $_smtphost = "your_smtp_hostname"; // e.g smtp.gmail.com
-$_baseUrl = "http://your_url"; // your base url (if you'll want to run backup from web)
+$_baseUrl = "http://backup.example.com"; // your base url (if you'll want to run backup from web)
 $mailFrom = "robot@example.com"; // type in any mail adress, like robot@yourdomain.com
-$mailTo = "your_email"; // input your mail which will reveive backup status and links to download .zip files
-$fileDirectories = array("your_dir", "your_dir2"); // enter directories that you want to backup e.g /var/www/mysite
+$mailTo = ""; // input your mail which will reveive backup status and links to download .zip files
+$fileDirectories = array("/var/www/smth" , "/var/www/shmth2"); // enter directories that you want to backup e.g /var/www/mysite
 
 $date = date("Y-m-d");
-$dir = "your_path"; //name of the folder that this file is in (enter full path e.g /var/www/mysite
+$dir = "/var/www/backup/public_html/"; //name of the folder that this file is in (enter full path e.g /var/www/mysite
 $folderName = "backup";
 $databasesName = "databases-$date.zip"; // name for database .zip file
 $websitesName = "websites-$date.zip"; // name for websites .zip file
@@ -24,20 +24,21 @@ $connection = new mysqli($_hostname, $_username, $_password, $_database);
 $databaseUrl = "";
 $websiteUrl = "";
 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 set_time_limit(0);
 date_default_timezone_set('Europe/Vilnius');
 
+
 function removePrevious()
 {
-    global $dir, $progress, $folderName;
+    global $dir, $folderName, $progress, $folderName;
     
-    $folderName = $dir;
-    $dir = $dir . "/";
-    
-    if(file_exists($dir)) // if there is a folder with backup, we delete it first
+    if(file_exists($folderName)) // if there is a folder with backup, we delete it first
     {
         $progress .= "Removing previous ";
-        $command = "rm -rf $dir";
+        $command = "rm -rf $folderName";
         exec($command, $output, $return);
         if(!$return)
         {
@@ -49,10 +50,10 @@ function removePrevious()
         }
     }
     
-    if(!file_exists($dir)) // then we create a new one
+    if(!file_exists($folderName)) // then we create a new one
     {
         $mask=umask(0);
-        mkdir($dir, 0744);
+        mkdir($folderName, 0755);
         umask($mask);
     }
     
@@ -79,13 +80,13 @@ function getDatabases()
 
 function backupDatabases()
 {
-    global $databases, $dir, $progress;
+    global $databases, $dir, $folderName, $progress;
     
     for($a = 0; $a < sizeof($databases); $a++)
     {
         if($databases[$a] != "information_schema" && $databases[$a] != "performance_schema")
         {
-            $path = $dir . "$databases[$a].sql";
+            $path = $dir . $folderName . "/$databases[$a].sql";
             $command = "mysqldump --user=root --password=freedom1000 --host=localhost $databases[$a] > $path"; // we are backuping each database, by calling mysqldump shell command
             $progress .= "Backuping $databases[$a] ";
             exec($command, $output, $return);
@@ -106,12 +107,11 @@ function backupDatabases()
 
 function zipDatabases()
 {
-    global $dir, $databasesName, $progress;
+    global $dir, $folderName, $databasesName, $progress;
     
-    echo "Zipping databases ";
     $progress .= "Zipping databases ";
-    $path = $dir . $databasesName;
-    $command = "zip -j $path $dir/*.*"; // we are zipping all database backup files into one .zip file
+    $path = $dir . $folderName . "/" . $databasesName;
+    $command = "zip -j $path $dir . $folderName/*.*"; // we are zipping all database backup files into one .zip file
     exec($command, $output, $return);
     if(!$return)
     {
@@ -129,7 +129,7 @@ function zipWebpages()
     global $dir, $fileDirectories, $websitesName, $progress, $_baseUrl, $databasesName, $websitesName, $folderName;
     
     $progress .= "Zipping websites ";
-    $path = $dir . $websitesName;
+    $path = $dir . $folderName . "/" . $websitesName;
     $command = "zip -r $path "; // we are zipping all directories that were marked for backup into one .zip
     for($a = 0; $a < sizeof($fileDirectories); $a++)
     {
@@ -160,13 +160,10 @@ function zipWebpages()
 
 function chmodFolder()
 {
-    global $dir, $databasesName, $websitesName;
+    global $dir, $folderName, $databasesName, $websitesName;
     
-    $commands = array("chown apache:apache " . $dir, "chown apache:apache " . $dir . $databasesName, "chmod 755 " . $dir . $databasesName, "chown apache:apache " . $dir . $websitesName, "chmod 755 " . $dir . $websitesName);
-    for($a = 0; $a < sizeof($commands); $a++)
-    {
-        exec($commands[$a], $output, $return);
-    }
+    $command = "chown ftp:ftp -R " . $dir . $folderName;
+    exec($command, $output, $return);
 }
 
 function sendMail()
