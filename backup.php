@@ -171,7 +171,6 @@ function sendMail()
     global $progress, $mailFrom, $mailTo, $_smtpname, $_smtppassword, $_smtphost;
 
     $mail = new PHPMailer;
-    $mail->isSMTP(true);/*Set mailer to use SMTP*/
     $mail->Host = $_smtphost;/*Specify main and backup SMTP servers*/
     $mail->Port = 465;
     $mail->SMTPAuth = true;/*Enable SMTP authentication*/
@@ -183,7 +182,7 @@ function sendMail()
     $mail->addAddress($mailTo);/*Add a recipient*/
     $mail->WordWrap = 70;/*DEFAULT = Set word wrap to 50 characters*/
     $mail->isHTML(true);/*Set email format to HTML (default = true)*/
-    $mail->Subject = $subject;
+    $mail->Subject = "Backup succesfull!";
     $mail->Body    = $progress;
     $mail->AltBody = $progress;
     if(!$mail->send()) 
